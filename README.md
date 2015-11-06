@@ -42,15 +42,15 @@ much sense when you drop a REST API into the picture.
 
     hiera('foo')
      ↳ http://configdb.example.com/query?key=foo&source=roscoe.example.com
-                                                        404 Not Found ↩︎
-     ↳ http://configdb.example.com/query?key=foo&source=hieradata/RedHat
-                                                        404 Not Found ↩︎
+                                                404 Not Found ↩︎
+     ↳ http://configdb.example.com/query?key=foo&source=RedHat
+                                                404 Not Found ↩︎
      ↳ http://configdb.example.com/query?key=foo&source=north_america
-                                                        404 Not Found ↩︎
+                                                404 Not Found ↩︎
      ↳ http://configdb.example.com/query?key=foo&source=houston
-                                                        404 Not Found ↩︎
+                                                404 Not Found ↩︎
      ↳ http://configdb.example.com/query?key=foo&source=defaults
-                                                                'bar' ↩︎
+                                                       'bar' ↩︎
 
 That's a lot of HTTP calls, each adding latency!
 
