@@ -111,6 +111,13 @@ installed it on Puppet Enterprise, the server will be located at
 
 A sample init script is located in the `docs` directory of the gem.
 
+## TODO
+
+* Finish the SSL support.
+    * Client certificate validation
+    * Allowed client whitelist
+* Cache Hiera instances on the server maybe?
+
 ## Disclaimer
 
 This is currently a proof of concept and was written in just a few hours. You get what you pay for.
