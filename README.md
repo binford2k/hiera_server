@@ -11,6 +11,9 @@ Rather than making multiple HTTP requests, the client will send the full scope
 and any relevant configuration to the server as part of a single request. The
 server will perform the data lookup and return a single response.
 
+SSL is currently untested, as this is a POC. My next step is to validate client
+and server certificates so this can be used for something worthwhile.
+
 ## Installation
 
 Install the gem in the proper GEMPATHs on both the local and remote systems.
