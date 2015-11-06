@@ -1,0 +1,73 @@
+#! /usr/bin/env ruby
+
+require 'rubygems'
+require 'fileutils'
+require 'sinatra/base'
+require 'webrick'
+require 'webrick/https'
+require 'openssl'
+require 'resolv'
+require 'json'
+
+require 'hiera'
+require 'hiera/util'
+require 'optparse'
+
+require 'hiera_server'
+
+$config = YAML.load_file(File.join(Hiera::Util.config_dir, 'hiera.yaml'))
+$config[:server]           ||= {}
+$config[:server][:bind]    ||= '0.0.0.0'
+$config[:server][:port]    ||= '8141'
+$config[:server][:ssl]     ||= false
+$config[:server][:logfile] ||= '/var/log/hiera_server'
+$config[:server][:pidfile] ||= '/var/run/hiera_server.pid'
+
+optparse = OptionParser.new { |opts|
+  opts.banner = "Usage : #{File.basename($PROGRAM_NAME)}"
+
+  opts.on("-d", "--debug", "Display extra debugging information.") do
+    require 'pry'
+    $config[:server][:debug] = true
+  end
+
+  opts.separator('')
+
+  opts.on("-h", "--help", "Displays this help") do
+    puts opts
+    exit
+  end
+}
+optparse.parse!
+
+if $config[:server][:debug]
+  servertype = WEBrick::SimpleServer
+  loglevel   = WEBrick::Log::DEBUG
+else
+  servertype = WEBrick::Daemon
+  loglevel   = WEBrick::Log::INFO
+end
+
+options = {
+  :Host          => $config[:server][:bind],
+  :Port          => $config[:server][:port],
+  :Logger        => WEBrick::Log::new($config[:server][:logfile], loglevel),
+  :ServerType    => servertype,
+  :SSLEnable     => $config[:server][:ssl],
+  :StartCallback => Proc.new { File.open($config[:server][:pidfile], 'w') {|f| f.write Process.pid } },
+}
+if $config[:server][:ssl] then
+  options[:SSLVerifyClient] = OpenSSL::SSL::VERIFY_PEER
+  options[:SSLCertificate]  = OpenSSL::X509::Certificate.new(File.open("#{$config[:server][:public_key]}").read)
+  options[:SSLPrivateKey]   = OpenSSL::PKey::RSA.new(File.open("#{$config[:server][:private_key]}").read)
+  options[:SSLCertName]     = [ [ "CN",WEBrick::Utils::getservername ] ]
+end
+
+Rack::Handler::WEBrick.run(HieraServer, options) do |server|
+  [:INT, :TERM].each do |sig|
+    trap(sig) do
+      server.stop
+      FileUtils.rm $config[:server][:pidfile]
+    end
+  end
+end
