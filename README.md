@@ -14,6 +14,55 @@ server will perform the data lookup and return a single response.
 SSL is currently untested, as this is a POC. My next step is to validate client
 and server certificates so this can be used for something worthwhile.
 
+## Significance
+
+In a standard `hiera()` lookup, Hiera will walk the entire hierarchy, querying
+each level until it gets an answer, or exhausts options. I'll provide a few
+examples using this hierarchy:
+
+    :hierarchy:
+      - "%{clientcert}"
+      - "%{osfamily}"
+      - "%{region}"
+      - "%{datacenter}"
+      - defaults
+
+A simple lookup will result in many queries, such as:
+
+    hiera('foo')
+     ↳ look for 'foo' in 'roscoe.example.com.yaml'
+     ↳ look for 'foo' in 'RedHat.yaml'
+     ↳ look for 'foo' in 'north_america.yaml'
+     ↳ look for 'foo' in 'houston.yaml'
+     ↳ look for 'foo' in 'defaults.yaml'
+
+This seems like a lot, but on a local filesystem, it makes perfect sense. They're
+all cached into RAM by the kernel and lookups are very fast. It doesn't make as
+much sense when you drop a REST API into the picture.
+
+    hiera('foo')
+     ↳ http://configdb.example.com/query?key=foo&source=roscoe.example.com
+                                                        404 Not Found ↩︎
+     ↳ http://configdb.example.com/query?key=foo&source=hieradata/RedHat
+                                                        404 Not Found ↩︎
+     ↳ http://configdb.example.com/query?key=foo&source=north_america
+                                                        404 Not Found ↩︎
+     ↳ http://configdb.example.com/query?key=foo&source=houston
+                                                        404 Not Found ↩︎
+     ↳ http://configdb.example.com/query?key=foo&source=defaults
+                                                                'bar' ↩︎
+
+That's a lot of HTTP calls, each adding latency!
+
+This Hiera Server gem instead sends the full scope along with a single request.
+The server will walk the hierarchy and do all the lookups server-side, before
+returning a single response.
+
+![Screenshot](http_traffic.png)
+
+The side benefit to this method is that all existing Hiera backends will work
+transparently without the need for adaptation.
+
 ## Installation
 
 Install the gem in the proper GEMPATHs on both the local and remote systems.
