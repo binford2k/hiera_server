@@ -71,14 +71,14 @@ to.
     * `[:server][:hierarchy]`
         * If set, this will override or add to the `:hierarchy` on the server
     * `[:server][:hierarchy_override]`
-        * Describes how to merge the ':hierarchy' on the server
-        * Accepted values are: 'prepend`, 'append', 'replace'
+        * Describes how to merge the `:hierarchy` on the server
+        * Accepted values are: `prepend`, `append`, `replace`
 
 ### Example `hiera.yaml` file on the client
 
 This will force the server to use the `yaml` backend when servicing requests,
-and will put the `%{clientcert}` at the top of the hierarchy used by the server.
-The server contacted will be `master.puppetlabs.vm` on port `8141`.
+and will add the `%{clientcert}` datasource to the top of the hierarchy used by
+the server.  The server contacted will be `master.puppetlabs.vm` on port `8141`.
 
     ---
     :backends:
