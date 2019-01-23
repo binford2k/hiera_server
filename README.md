@@ -1,3 +1,6 @@
+Note: This project is no longer relevant in the world of Hiera 5, which can resolve the full scope in a single request.
+
+
 # Hiera Server
 
 Hiera Server separates the query and the data retrieval into separate processes.
